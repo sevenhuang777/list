@@ -58,7 +58,7 @@ Node *insert_node(Node* prev, Node* new, Node* now, int value)
 	return now;
 }
 
-Node *make_list(Node* head ,Node* prev, Node* new, Node* now, int value)
+Node *make_node(Node* head ,Node* prev, Node* new, Node* now, int value)
 {
 	if(head == NULL)
 	{			
@@ -81,6 +81,35 @@ Node *make_list(Node* head ,Node* prev, Node* new, Node* now, int value)
 	}
 
 	return head;
+}
+
+Node *delete_node( Node* head, int value)
+{
+	Node *p = head, *prev = NULL, *rehead = head;
+	while ( p && (p->value <= value) )
+	{
+		if( p->value == value )
+		{
+			if( p == head )
+			{
+				rehead = p->next;
+				free(p);
+				p = rehead;
+			}
+			else
+			{
+				prev->next = p->next;
+				free(p);
+				p = prev->next;
+			}
+		}
+		else
+		{
+			prev = p;
+			p = p->next;
+		}
+	}
+	return rehead;
 }
 
 void printf_list(Node *head)
@@ -120,16 +149,39 @@ Node *input_ins(Node *head, Node* prev, Node* new, Node* now, char *ins)
 			break;
 		}
 	}
-	//printf("%d\n",length);
 	for( i = 0; i < length; i++)
 	{
 		value = value * 10 + (*num++) - '0';
 		//num ++;
 	}
-	//printf("%d\n",value);
-	head = make_list(head , prev,  new,  now, value);
 
-	return head;
+	return make_node(head , prev,  new,  now, value);
+}
+
+Node *delete_ins(Node *head, Node* prev, Node* new, Node* now, char *ins)
+{
+	int i = 0;
+	int length = strlen(ins) - strlen(DELETE);
+	char *num = ins + strlen(DELETE);
+	int value = 0;
+	for(i=0 ; i < length ; i++)
+	{
+		if((*num) == ' ')
+		{
+			length --;
+			num ++;
+		}
+		else if( (*num) >= '0' && (*num) <= '9' )
+		{
+			break;
+		}
+	}
+	for( i = 0; i < length; i++)
+	{
+		value = value * 10 + (*num++) - '0';
+	}
+	
+	return delete_node( head, value);
 }
 
 int main()
@@ -149,7 +201,7 @@ int main()
 	{
 		printf("Please input num %d:", i+1);
 		scanf("%d", &input_num);
-		p_list->Head = make_list( p_list->Head, prev, new, now, input_num);
+		p_list->Head = make_node( p_list->Head, prev, new, now, input_num);
 	}
 	printf_list( p_list->Head );
 	while ((c = getchar()) != EOF && c != '\n');//不停地使用getchar()获取缓冲中字符，直到获取的c是“\n”或文件结尾符EOF为止
@@ -167,16 +219,15 @@ int main()
 		{
 			case _insert:
 				p_list->Head = input_ins( p_list->Head, prev, new, now, ins);
-				printf_list( p_list->Head);
 				break;
 			case _delete:
-				printf("delete\n");
+				p_list->Head = delete_ins( p_list->Head, prev, new, now, ins);
 				break;
 			default:
 				printf("warning: found not support instruction %d\n" , parser);
 				break;
 		}
-		
+		printf_list( p_list->Head);
 	}
 	
 	free(ins);	
