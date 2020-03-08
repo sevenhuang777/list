@@ -4,6 +4,7 @@
 #include<stddef.h>
 
 #define INS_LEN 20
+#define MAX 10
 #define INSERT "insert"
 #define DELETE "delete"
 #define QUIT "quit"
@@ -41,43 +42,43 @@ int judge_ins(char *ins)
 	return result;
 }
 
-Node *insert_node(Node* prev, Node* new, Node* now, int value)
+Node *insert_node(Node* prev, Node* new, int value)
 {
-	now = (Node *)malloc( sizeof(Node) );
-	if(now == NULL)  
+	Node *p = NULL;
+	p = (Node *)malloc( sizeof(Node) );
+	if(p == NULL)  
 	{
 		printf("malloc Node now failed!\r\n");
 	}
 	else
 	{
-		now->value = value;
-		now->next = new;
+		p->value = value;
+		p->next = new;
 		if( prev != NULL )
-			prev->next = now;
+			prev->next = p;
 	}
-	return now;
+	return p;
 }
 
-Node *make_node(Node* head ,Node* prev, Node* new, Node* now, int value)
+Node *make_node(Node* head, int value)
 {
-	if(head == NULL)
+	Node *prev = NULL, *now = NULL,*new = head;
+	if( new == NULL )
 	{			
-		head = insert_node(prev, new, now, value);
+		head = insert_node( prev, new, value);
 	}
 	else
 	{
-		new = head;
-		prev = NULL;
 		while( new && value > new->value )
 		{
 			prev = new;
 			new = new->next;
 		}
 				
-		if( NULL == prev )
-			head = insert_node(prev, new, now, value);
+		if( new == head )
+			head = insert_node( prev, new, value);
 		else
-			(void)insert_node(prev, new, now, value);
+			(void)insert_node( prev, new, value);
 	}
 
 	return head;
@@ -85,16 +86,16 @@ Node *make_node(Node* head ,Node* prev, Node* new, Node* now, int value)
 
 Node *delete_node( Node* head, int value)
 {
-	Node *p = head, *prev = NULL, *rehead = head;
+	Node *p = head, *prev = NULL;
 	while ( p && (p->value <= value) )
 	{
 		if( p->value == value )
 		{
 			if( p == head )
 			{
-				rehead = p->next;
+				head = p->next;
 				free(p);
-				p = rehead;
+				p = head;
 			}
 			else
 			{
@@ -109,7 +110,7 @@ Node *delete_node( Node* head, int value)
 			p = p->next;
 		}
 	}
-	return rehead;
+	return head;
 }
 
 void printf_list(Node *head)
@@ -131,34 +132,56 @@ void printf_list(Node *head)
 	}
 }
 
-Node *input_ins(Node *head, Node* prev, Node* new, Node* now, char *ins)
+int list_len(Node *head)
+{
+	Node *p = head;
+	int length = 0;
+	while( p != NULL )
+	{
+		length ++;
+		p = p->next;
+	}
+	return length;
+}
+
+Node *input_ins(Node *head, char *ins)
 {
 	int i = 0;
 	int length = strlen(ins) - strlen(INSERT);
 	char *num = ins + strlen(INSERT);
 	int value = 0;
-	for(i=0 ; i < length ; i++)
-	{
-		if((*num) == ' ')
-		{
-			length --;
-			num ++;
-		}
-		else if( (*num) >= '0' && (*num) <= '9' )
-		{
-			break;
-		}
-	}
-	for( i = 0; i < length; i++)
-	{
-		value = value * 10 + (*num++) - '0';
-		//num ++;
-	}
+	int ls_len = list_len( head );
 
-	return make_node(head , prev,  new,  now, value);
+	if( ls_len < MAX )
+	{
+		for(i=0 ; i < length ; i++)
+		{
+			if((*num) == ' ')
+			{
+				length --;
+				num ++;
+			}
+			else if( (*num) >= '0' && (*num) <= '9' )
+			{
+				break;
+			}
+		}
+		for( i = 0; i < length; i++)
+		{
+			value = value * 10 + (*num++) - '0';
+			//num ++;
+		}
+
+		return make_node( head, value);
+	}
+	else
+	{
+		return head;
+	}
+		
 }
 
-Node *delete_ins(Node *head, Node* prev, Node* new, Node* now, char *ins)
+Node *delete_ins(Node *head, char *ins)
 {
 	int i = 0;
 	int length = strlen(ins) - strlen(DELETE);
@@ -190,7 +213,6 @@ int main()
 	int parser;
 	List_info *p_list = &list;
 	int input_num = 0;
-	Node *now = NULL, *prev = NULL, *new = NULL;
 	char *ins = (char *)malloc( sizeof(char) * INS_LEN );
 	char c;
 	
@@ -201,7 +223,7 @@ int main()
 	{
 		printf("Please input num %d:", i+1);
 		scanf("%d", &input_num);
-		p_list->Head = make_node( p_list->Head, prev, new, now, input_num);
+		p_list->Head = make_node( p_list->Head, input_num);
 	}
 	printf_list( p_list->Head );
 	while ((c = getchar()) != EOF && c != '\n');//不停地使用getchar()获取缓冲中字符，直到获取的c是“\n”或文件结尾符EOF为止
@@ -218,10 +240,10 @@ int main()
 		switch(parser)
 		{
 			case _insert:
-				p_list->Head = input_ins( p_list->Head, prev, new, now, ins);
+				p_list->Head = input_ins( p_list->Head, ins);
 				break;
 			case _delete:
-				p_list->Head = delete_ins( p_list->Head, prev, new, now, ins);
+				p_list->Head = delete_ins( p_list->Head, ins);
 				break;
 			default:
 				printf("warning: found not support instruction %d\n" , parser);
